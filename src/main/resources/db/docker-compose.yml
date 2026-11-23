@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: handoff_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: handoff_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+# quay.io/minio/minio:latest зеркало_1
+# bitnami/minio:latest зеркало_2
+# Докер обращается к quay.io но на анонимный манифест не отвечает
+
+  # minio:
+  #   image: quay.io/minio/minio:latest
+  #   container_name: handoff_minio
+  #   restart: unless-stopped
+  #   command: server /data --console-address ":9001"
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: miniosecretpassword
+  #   ports:
+  #     - "9000:9000" # для бэка, S3 API
+  #     - "9001:9001" # для браузеры
+  #   volumes:
+  #     - minio_data:/data
+
+  # localstack:
+  #   image: localstack/localstack:latest
+  #   container_name: handoff_localstack_s3
+  #   restart: unless-stopped
+  #   environment:
+  #     SERVICES: s3
+  #     DEFAULT_REGION: us-east-1
+  #     EAGER_SERVICE_LOADING: "1"
+  #   ports:
+  #     - "4566:4566"  # http://localhost:4566
+  #   volumes:
+  #     - localstack_data:/var/lib/localstack
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: handoff_rustfs
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: minioadmin
+      RUSTFS_SECRET_KEY: miniosecretpassword
+    ports:
+      - "9000:9000"
+    volumes:
+      - rustfs_data:/data
+      
+volumes:
+  pgdata:
+  rustfs_data:
+  # localstack_data:
